@@ -20,14 +20,8 @@ from tasks.views import tasks_view, about_page_view
 
 urlpatterns = [
     path("admin/", admin.site.urls),
-    path("", tasks_view, name="tasks"),
+    path("tasks/", tasks_view, name="tasks"),
     path("about/", about_page_view, name="about"),
     path("", include("tasks.urls", namespace="tasks")),
     path("", include("users.urls", namespace="users")),
-
-
-
-    # path('sign-up/', views.sign_up_view, name='sign_up'),
-    # path('sign-in/', views.sign_in_view, name='sign_in'),
-    # path('logout/', views.logout_view, name='logout'),
 ]
