@@ -1,0 +1,45 @@
+{% extends 'base.html' %}
+
+{% block title %}
+    Detail
+{% endblock %}
+
+{% block content %}
+<body>
+    <h1>Detail task</h1>
+
+        <style>
+          .card.d-inline-block {
+            margin-right: 19px;
+            margin-bottom: 19px;/* Задайте желаемое расстояние между карточками */
+          }
+        </style>
+
+        <div class="card d-inline-block" style="width: 18rem;">
+            <div class="card-body p-3">
+                <img class="card-img-top" src="https://picsum.photos/200/200?random=1" alt="Card image cap">
+                <h5 class="card-title">{{ task.title }}</h5>
+                <p class="card-text">{{ task.description }}</p>
+                <p class="card-text">Status: {% if task.status %}Completed{% else %}In Progress{% endif %}</p>
+
+                <p class="card-text">Reporter: {{ task.reporter }}</p>
+                <p class="card-text">Assignee: {{ task.assignee }}</p>
+
+
+                <i class="card-text"><small class="text-muted">Created at: {{ task.created_at }}</small>
+                <p  class="card-text"><small class="text-muted">Updated at: {{ task.updated_at }}</small>
+
+                <a href="{% url 'tasks:update' task.id %}" class="btn btn-warning">Update</a>
+
+                {% if user.is_authenticated %}
+                    {% if task.reporter == user %}
+                        {% if not task.status %}
+                        <a href="{% url 'tasks:delete' task.id %}" class="btn btn-danger">Delete</a>
+                        {% endif %}
+                    {% endif %}
+                {% endif %}
+            </div>
+        </div>
+
+</body>
+{% endblock %}
