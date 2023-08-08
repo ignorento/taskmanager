@@ -1,118 +1,60 @@
-from django.contrib.auth.decorators import login_required
-from django.http.response import HttpResponse
-from django.http.request import HttpRequest
-from django.views.decorators.http import require_http_methods
-from django.contrib.auth.models import User
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.core.exceptions import PermissionDenied
+from django.http import HttpResponseForbidden
+
+from django.views.generic import TemplateView, ListView, DetailView, CreateView, UpdateView, DeleteView
 
 from tasks.form import TaskCreateForm, TaskUpdateAssigneeForm
 from tasks.models import TaskModel
 
-from django.shortcuts import get_object_or_404, render, redirect
+class ListTasksView(ListView):
+    model = TaskModel
 
+class AboutPageView(TemplateView):
+    template_name = "tasks/about.html"
 
-def tasks_view(request: HttpRequest) -> HttpResponse:
-    """
-    Homepage
-    Tasks list view
-    """
-    tasks = TaskModel.objects.all()
-    return render(request, "tasks/all_tasks.html", {'tasks': tasks})
+class TaskDetailView(DetailView):
+    model = TaskModel
 
+class TaskCreateView(LoginRequiredMixin, CreateView):
+    model = TaskModel
+    form_class = TaskCreateForm
+    login_url = "/sign-up/"
+    success_url = "/"
+    extra_context = {"action": "Create"}
 
-def about_page_view(request: HttpRequest) -> HttpResponse:
-    """
-    About
-    """
-    return HttpResponse("About application page")
+    def form_valid(self, form):
+        form.instance.reporter = self.request.user
+        return super().form_valid(form)
 
-def task_detail_view(request: HttpRequest, uuid: str) -> HttpResponse:
-    """
-    Show detail task
-    """
-    task = get_object_or_404(TaskModel, id=uuid)
-    return render(request, 'tasks/detail_task.html', {'task': task})
+class TaskUpdateView(LoginRequiredMixin, UpdateView):
+    model = TaskModel
+    login_url = "/sign-up/"
+    success_url = "/"
+    extra_context = {"action": "Update"}
 
+    def get_form_class(self):
+        task = self.get_object()
+        if task.reporter == self.request.user:
+            return TaskCreateForm
+        else:
+            return TaskUpdateAssigneeForm
 
-@login_required
-@require_http_methods(["GET", "POST"])
-def create_task_view(request: HttpRequest) -> HttpResponse:
-    """
-    Create new task
-    """
-    if request.method == "POST":
-        form = TaskCreateForm(request.POST)
-        if form.is_valid():
-            title = form.cleaned_data['title']
-            description = form.cleaned_data['description']
-            status = False
-            reporter = request.user
-            assignee = form.cleaned_data['assignee']
+    def get_object(self, queryset=None):
+        task = super().get_object(queryset=queryset)
+        if not (task.reporter == self.request.user or task.assignee == self.request.user):
+            raise PermissionDenied
+        return task
 
-            task = TaskModel.objects.create(
-                title=title,
-                description=description,
-                status=status,
-                reporter=reporter,
-                assignee=assignee,
-            )
+class TaskDeleteView(LoginRequiredMixin, DeleteView):
+    model = TaskModel
+    login_url = "/sign-up/"
+    success_url = "/"
 
-            return redirect("/")
-    # else:
-    #     initial_data = {}
-    #     if request.user.is_authenticated:
-    #         initial_data['reporter'] = request.user.username
-    #     form = TaskCreateForm(initial=initial_data)
-    form = TaskCreateForm()
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
 
-    return render(request, 'tasks/create_task.html', {'form': form})
+        if self.object.reporter != self.request.user or self.object.status:
+            return HttpResponseForbidden("You don't have permission to delete this task.")
 
-@login_required
-@require_http_methods(["GET", "POST"])
-def task_update_view(request: HttpRequest, uuid) -> HttpResponse:
-    """
-    Update task
-    """
-    if request.method == "POST":
-        task = get_object_or_404(TaskModel, id=uuid)
-        if task.reporter == request.user:
-            form = TaskCreateForm(request.POST)
-            if form.is_valid():
-                task.title = form.cleaned_data['title']
-                task.description = form.cleaned_data['description']
-                task.assignee = form.cleaned_data['assignee']
-                task.save()
-
-                return redirect('tasks:detail', uuid=uuid)
-
-        if task.assignee == request.user:
-            form = TaskUpdateAssigneeForm(request.POST)
-            if form.is_valid():
-                task.title = form.cleaned_data['title']
-                task.description = form.cleaned_data['description']
-                task.save()
-
-                return redirect('tasks:detail', uuid=uuid)
-
-    task = get_object_or_404(TaskModel, id=uuid)
-    if task.reporter == request.user:
-        form = TaskCreateForm(initial={
-            'title': task.title,
-            'description': task.description,
-            'assignee': task.assignee,
-        })
-    if task.assignee == request.user:
-        form = TaskUpdateAssigneeForm(initial={
-            'title': task.title,
-            'description': task.description,
-            'assignee': task.assignee,
-        })
-    return render(request, 'tasks/update_task.html', {'form': form})
-
-def task_delete_view(request: HttpRequest, uuid: str) -> HttpResponse:
-    """
-    Delete task
-    """
-    task = TaskModel.objects.get(id=uuid)
-    task.delete()
-    return redirect('/')
-
+        return super().get(request, *args, **kwargs)

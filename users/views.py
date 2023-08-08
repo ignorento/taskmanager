@@ -1,59 +1,38 @@
-from django.contrib.auth import logout, login, authenticate
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.contrib.auth.views import LoginView, LogoutView
 from django.shortcuts import render, redirect
-from django.http.response import HttpResponse, HttpResponseRedirect
-from django.http.request import HttpRequest
-from django.views.decorators.http import require_http_methods
 
-from .forms import UserRegistrationForm, UserLoginForm
+from django.urls import reverse_lazy
 
+from django.views.generic import FormView
 
-@require_http_methods(["GET", "POST"])
-def sign_up_view(request: HttpRequest) -> HttpResponse:
-    """
-    User registration
-    """
-    if request.user.is_authenticated:
-
-        return redirect('/')
-
-    if request.method == "POST":
-        form = UserRegistrationForm(request.POST)
-        if form.is_valid():
-            form.save_new_user()
-
-            return HttpResponseRedirect("/sign-in/")
-    else:
-        form = UserRegistrationForm()
-
-    return render(request, "users/register.html", {"form": form})
+from .forms import UserRegistrationForm
 
 
-@require_http_methods(["GET", "POST"])
-def sign_in_view(request: HttpRequest) -> HttpResponse:
-    """
-    User login
-    """
-    if request.user.is_authenticated:
+class SignUpRegistrationView(FormView):
+    template_name = "users/register.html"
+    form_class = UserRegistrationForm
+    success_url = reverse_lazy("users:sign_in")
 
-        return redirect('/')
+    def dispatch(self, request, *args, **kwargs):
+        if self.request.user.is_authenticated:
+            return redirect(self.success_url)
+        return super().dispatch(request, *args, **kwargs)
 
-    if request.method == 'POST':
-        form = UserLoginForm(request.POST)
-        if form.is_valid():
-            username = form.cleaned_data['username']
-            password = form.cleaned_data['password']
-            user = authenticate(request, username=username, password=password)
-            login(request, user)
-            return redirect("/")
-    else:
-        form = UserLoginForm()
-
-    return render(request, 'users/login.html', {'form': form})
+    def form_valid(self, form):
+        form.save_new_user()
+        return super().form_valid(form)
 
 
-def logout_view(request: HttpRequest) -> HttpResponse:
-    """
-    User logout
-    """
-    logout(request)
-    return redirect('/')
+class SignInLoginView(LoginView):
+    template_name = "users/login.html"
+    redirect_authenticated_user = True
+
+    def get_success_url(self):
+        return reverse_lazy('tasks:tasks')
+
+
+class UserLogoutView(LoginRequiredMixin, LogoutView):
+
+    def get_success_url(self):
+        return reverse_lazy("tasks:tasks")

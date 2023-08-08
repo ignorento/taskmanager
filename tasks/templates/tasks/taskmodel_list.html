@@ -8,7 +8,7 @@
 <body>
     <h1>All tasks</h1>
 
-    {% for task in tasks %}
+    {% for task in object_list %}
         <style>
           .card.d-inline-block {
             margin-right: 19px;
@@ -19,8 +19,8 @@
         <div class="card d-inline-block" style="width: 18rem;">
             <div class="card-body p-3">
                 <img class="card-img-top" src="https://picsum.photos/200/200?random=1" alt="Card image cap">
-                <h5 class="card-title">{{ task.title }}</h5>
-                <p class="card-text">{{ task.description }}</p>
+                <h5 class="card-title" style="padding-bottom: 10px;">{{ task.title }}</h5>
+                <p class="card-text" style="max-height: 50px; overflow-y: auto; padding-bottom: 25px;">{{ task.description }}</p>
                 <p class="card-text">Status: {% if task.status %}Completed{% else %}In Progress{% endif %}</p>
 
                 <p class="card-text">Reporter: {{ task.reporter }}</p>
@@ -31,7 +31,6 @@
                 <p  class="card-text"><small class="text-muted">Updated at: {{ task.updated_at }}</small>
 
                 <a href="{% url 'tasks:detail' task.id %}" class="btn btn-primary">Detail</a>
-
             </div>
         </div>
 

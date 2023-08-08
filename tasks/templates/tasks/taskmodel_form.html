@@ -1,16 +1,16 @@
 {% extends 'base.html' %}
 
 {% block title %}
-    Create Task
+{{ action }} Task
 {% endblock %}
 
 {% block content %}
-    <h1>Create New Task</h1>
+    <h1>{{ action }} Task</h1>
 
     <form method="post">
     {% csrf_token %}
     {{ form.as_div }}
-    <input type="submit" value="Create">
+    <input type="submit" value={{ action }}>
 </form>
 </body>
 {% endblock %}
