@@ -1,5 +1,6 @@
 from django.contrib.auth.mixins import LoginRequiredMixin
 from django.core.exceptions import PermissionDenied
+from django.http import HttpResponseForbidden
 
 from django.views.generic import TemplateView, ListView, DetailView, CreateView, UpdateView, DeleteView
 
@@ -32,17 +33,24 @@ class TaskUpdateView(LoginRequiredMixin, UpdateView):
     success_url = "/"
     extra_context = {"action": "Update"}
 
-    def get_object(self, queryset=None):
-        task = super().get_object(queryset=queryset)
+    def get_form_class(self):
+        task = self.get_object()
         if task.reporter == self.request.user:
-            self.form_class = TaskCreateForm
+            return TaskCreateForm
         elif task.assignee == self.request.user:
-            self.form_class = TaskUpdateAssigneeForm
+            return TaskUpdateAssigneeForm
         else:
             raise PermissionDenied
-        return task
 
 class TaskDeleteView(LoginRequiredMixin, DeleteView):
     model = TaskModel
     login_url = "/sign-up/"
     success_url = "/"
+
+    def get(self, request, *args, **kwargs):
+        self.object = self.get_object()
+
+        if self.object.reporter != self.request.user or self.object.status:
+            return HttpResponseForbidden("You don't have permission to delete this task.")
+
+        return super().get(request, *args, **kwargs)
