@@ -37,10 +37,14 @@ class TaskUpdateView(LoginRequiredMixin, UpdateView):
         task = self.get_object()
         if task.reporter == self.request.user:
             return TaskCreateForm
-        elif task.assignee == self.request.user:
-            return TaskUpdateAssigneeForm
         else:
+            return TaskUpdateAssigneeForm
+
+    def get_object(self, queryset=None):
+        task = super().get_object(queryset=queryset)
+        if not (task.reporter == self.request.user or task.assignee == self.request.user):
             raise PermissionDenied
+        return task
 
 class TaskDeleteView(LoginRequiredMixin, DeleteView):
     model = TaskModel
