@@ -1,0 +1,2 @@
+DELETE http://localhost:8000/api/f69ec7d8-eb78-44fd-95e5-6db4e5bcb81a/
+Content-Type: application/json

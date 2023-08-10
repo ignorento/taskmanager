@@ -6,3 +6,4 @@ typing-extensions==4.6.3 ; python_version >= "3.9" and python_version < "3.11"
 tzdata==2023.3 ; python_version >= "3.9" and python_version < "4.0" and sys_platform == "win32"
 
 Django~=4.2.2
+djangorestframework~=3.14.0
