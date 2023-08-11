@@ -28,4 +28,5 @@ urlpatterns = [
     path("about/", AboutPageView.as_view(), name="about"),
     path("", include("tasks.urls", namespace="tasks")),
     path("", include("users.urls", namespace="users")),
+    path("api/", include("api.urls")),
 ] + static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
