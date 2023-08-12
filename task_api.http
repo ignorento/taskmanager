@@ -1,2 +1,10 @@
-DELETE http://localhost:8000/api/f69ec7d8-eb78-44fd-95e5-6db4e5bcb81a/
+PATCH http://localhost:8000/api/39bcb18e-449f-4c92-af67-5c6b31f2f003/
 Content-Type: application/json
+Authorization: Token 5947ae054dc62a22d60c358e1ca3aca17db86164
+
+{
+  "title": "iii",
+  "description": "api",
+  "assignee": 6,
+  "reporter": 3
+}

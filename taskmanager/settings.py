@@ -39,6 +39,7 @@ INSTALLED_APPS = [
     'tasks',
 
     'rest_framework',
+    'rest_framework.authtoken',
     'api',
 ]
 
@@ -134,5 +135,9 @@ APPEND_SLASH = False
 REST_FRAMEWORK = {
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
-    )
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ),
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ]
 }
