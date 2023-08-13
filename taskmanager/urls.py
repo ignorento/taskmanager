@@ -22,6 +22,7 @@ from django.conf import settings
 
 from tasks.views import AboutPageView, ListTasksView
 
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     path("tasks/", ListTasksView.as_view(), name="tasks"),
